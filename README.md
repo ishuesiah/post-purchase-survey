@@ -1,3 +1,68 @@
+# Hemlock & Oak — Post-Purchase Survey
+
+In-house "How did you first hear about us?" (HDYHAU) survey for hemlockandoak.myshopify.com. A checkout UI extension renders a one-tap survey on the **Thank-you** and **Order status** pages; answers flow to this app's backend, which writes them to **order metafields** (namespace `survey`) and to **Klaviyo profile properties** (`hdyhau_source`, `hdyhau_detail`, `purchase_trigger`).
+
+Built on the Shopify React Router app template (original template docs are kept below).
+
+## How it works
+
+```
+Extension (Preact, s-* web components, both pages)
+  └─ POST/GET /api/survey  (Bearer session token, CORS)
+Backend
+  ├─ verify token, shop, payload allow-lists
+  ├─ upsert SurveyResponse by orderId → syncStatus=PENDING
+  ├─ fire-and-forget syncOrder(): order lookup → metafieldsSet → Klaviyo → SYNCED
+  ├─ orders/create webhook: flushes answers saved before the order existed
+  └─ 60s interval worker: retries PENDING rows with exponential backoff
+```
+
+Key design point: on the Thank-you page **the order does not exist yet** in the Admin API. Answers are stored as `PENDING` rows and flushed by the `orders/create` webhook (fast path) or the worker sweep (backstop). Every step — Prisma upsert, `metafieldsSet`, Klaviyo `profile-import` — is an upsert, so duplicate webhook deliveries and overlapping syncs are harmless.
+
+## Source-of-truth files
+
+| Behavior | File |
+| --- | --- |
+| Survey UI (both pages) | `extensions/post-purchase-survey/src/Survey.jsx` |
+| Questions/options/copy | `extensions/post-purchase-survey/src/questions.js` |
+| Extension → backend calls | `extensions/post-purchase-survey/src/api.js` |
+| Extension targets + capabilities | `extensions/post-purchase-survey/shopify.extension.toml` |
+| API endpoint (auth, validation, upsert) | `app/routes/api.survey.jsx` |
+| Answer allow-lists (must mirror questions.js) | `app/lib/survey-validation.server.js` |
+| Order lookup → metafields → Klaviyo → retry | `app/lib/sync.server.js` |
+| Klaviyo client | `app/lib/klaviyo.server.js` |
+| orders/create webhook (HMAC, dedupe) | `app/routes/webhooks.orders.create.jsx` |
+| Retry worker (started from `app/entry.server.jsx`) | `app/lib/worker.server.js` |
+| DB models (`SurveyResponse`, `ProcessedWebhook`) | `prisma/schema.prisma` |
+
+## Environment variables
+
+See `.env.example` for the full annotated list. Secrets (`SHOPIFY_API_SECRET`, `KLAVIYO_PRIVATE_KEY`, `DATABASE_URL`) are never committed; set them in `.env` locally and in the Sevalla dashboard in production.
+
+## Deploy (Sevalla)
+
+1. Sevalla → create a **PostgreSQL** database (same region as the app), connect it to the app so `DATABASE_URL` is injected over the internal network.
+2. Create the app from the GitHub repo (`ishuesiah/post-purchase-survey`). Build uses the repo `Dockerfile`; `npm run docker-start` runs `prisma migrate deploy` then starts the server. `PORT` is auto-injected.
+3. Set env vars in the Sevalla dashboard: everything in `.env.example` plus `NODE_ENV=production`.
+4. Update `application_url` and `[auth] redirect_urls` in `shopify.app.toml` to the Sevalla URL, then from the repo root run `shopify app deploy` (pushes config, webhooks, and the extension). Set `SURVEY_API_URL` in your shell/.env first — it is baked into the extension bundle at build time.
+5. Install the app on the store (creates the offline Admin session that `unauthenticated.admin` needs for syncs).
+6. **Manual dashboard steps (required, easy to miss):**
+   - Partner Dashboard → the extension → request **network access** (extension `fetch` is blocked without it).
+   - Shopify admin → Settings → Checkout → Customize → add the app block on **both** the Thank-you page and the Order status page.
+7. Optional: create `survey.*` order metafield definitions so answers render nicely in the order admin.
+
+## Gotchas
+
+- **`SURVEY_API_URL` is a build-time constant** in the extension (`process.env.SURVEY_API_URL` in `src/api.js` is substituted by the Shopify CLI). Changing the backend URL requires re-running `shopify app deploy`.
+- **Allow-lists are duplicated on purpose**: `app/lib/survey-validation.server.js` must stay in sync with `extensions/post-purchase-survey/src/questions.js`. Bump `SURVEY_VERSION` in both when options change.
+- The extension **fails silently by design** — network errors never surface on the checkout page. Debug via backend logs, not the storefront.
+- `order_id` is client-supplied (session token proves the caller is our extension, not which order they own). Accepted risk for a low-stakes survey; documented in `app/routes/api.survey.jsx`.
+- No customer PII is stored: the order email is fetched from the Admin API at sync time and passed straight to Klaviyo. Don't add an email column without revisiting the compliance webhook handlers.
+- The worker uses a `globalThis` guard because Vite dev-server reloads re-import modules; without it you get double sweeps in dev.
+- Admin API is pinned to `2026-07` (`app/shopify.server.js`), webhooks to `2026-10` (`shopify.app.toml`), extension to `2026-07` (verified 2026-09-28 — re-check before bumping).
+
+---
+
 # Shopify App Template - React Router
 
 This is a template for building a [Shopify app](https://shopify.dev/docs/apps/getting-started) using [React Router](https://reactrouter.com/). It was forked from the [Shopify Remix app template](https://github.com/Shopify/shopify-app-template-remix) and converted to React Router.

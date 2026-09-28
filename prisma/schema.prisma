@@ -1,16 +1,10 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
 
-// Note that some adapters may set a maximum length for the String type by default, please ensure your strings are long
-// enough when changing adapters.
-// See https://www.prisma.io/docs/orm/reference/prisma-schema-reference#string for more information
 datasource db {
-  provider = "sqlite"
-  url      = "file:dev.sqlite"
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model Session {
@@ -31,4 +25,42 @@ model Session {
   emailVerified Boolean?  @default(false)
   refreshToken        String?
   refreshTokenExpires DateTime?
+}
+
+// One row per order. Upserted incrementally as answers arrive from the
+// Thank-you / Order status extension, then synced to order metafields and
+// Klaviyo once the order exists. No customer PII is stored here: the order
+// email is fetched from the Admin API at sync time and passed straight to
+// Klaviyo (data minimization).
+model SurveyResponse {
+  id           String    @id @default(cuid())
+  orderId      String    @unique // numeric Shopify order id, as a string
+  shop         String // e.g. hemlockandoak.myshopify.com
+  source       String
+  sourceDetail String?
+  sourceText   String?
+  trigger      String?
+  surface      String // thank_you | order_status
+  version      Int       @default(1)
+  answeredAt   DateTime  @default(now()) // first answer time
+
+  // Sync state for metafields + Klaviyo
+  syncStatus   String    @default("PENDING") // PENDING | SYNCED | FAILED
+  attempts     Int       @default(0)
+  nextRetryAt  DateTime  @default(now())
+  lastError    String?
+  metafieldsAt DateTime?
+  klaviyoAt    DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([syncStatus, nextRetryAt])
+}
+
+// Webhook delivery dedupe (Shopify delivers at-least-once).
+model ProcessedWebhook {
+  webhookId   String   @id
+  topic       String
+  processedAt DateTime @default(now())
 }

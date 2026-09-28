@@ -1,0 +1,19 @@
+api_version = "2026-07"
+
+[[extensions]]
+type = "ui_extension"
+name = "post-purchase-survey"
+handle = "post-purchase-survey"
+uid = "b08c6577-3a67-404f-914c-989aacc06a55"
+description = "One-tap 'How did you hear about us?' survey on the Thank you and Order status pages"
+
+  [[extensions.targeting]]
+  module = "./src/ThankYou.jsx"
+  target = "purchase.thank-you.block.render"
+
+  [[extensions.targeting]]
+  module = "./src/OrderStatus.jsx"
+  target = "customer-account.order-status.block.render"
+
+  [extensions.capabilities]
+  network_access = true
