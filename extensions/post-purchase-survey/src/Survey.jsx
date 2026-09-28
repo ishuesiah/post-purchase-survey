@@ -103,12 +103,23 @@ export function Survey({ surface, orderId }) {
 
   if (status === "loading") return null;
 
+  // Card container approximating the mockup's bordered survey block.
+  // Colors/typography come from the store's checkout branding; extensions
+  // can only pick from the design-system tokens.
   if (status === "thanks") {
-    return <s-banner tone="success">{COPY.thanks}</s-banner>;
+    return (
+      <s-box border="base" borderRadius="base" padding="large" background="subdued">
+        <s-stack direction="inline" gap="base" alignItems="center">
+          <s-icon type="check-circle-filled" tone="success" size="large" />
+          <s-text type="strong">{COPY.thanks}</s-text>
+        </s-stack>
+      </s-box>
+    );
   }
 
   return (
-    <s-stack gap="base">
+    <s-box border="base" borderRadius="base" padding="large" background="subdued">
+      <s-stack gap="base">
       <s-heading>{COPY.heading}</s-heading>
 
       <s-choice-list
@@ -153,23 +164,28 @@ export function Survey({ surface, orderId }) {
       </s-choice-list>
 
       {source && (
-        <s-choice-list
-          label={COPY.q2Label}
-          name="trigger"
-          values={trigger ? [trigger] : []}
-          onChange={(event) => onQ2Change(event.currentTarget.values?.[0])}
-        >
-          {Q2_OPTIONS.map((option) => (
-            <s-choice key={option.value} value={option.value}>
-              {option.label}
-            </s-choice>
-          ))}
-        </s-choice-list>
+        <>
+          {/* Mirrors the mockup's q2-section top border. */}
+          <s-divider />
+          <s-choice-list
+            label={COPY.q2Label}
+            name="trigger"
+            values={trigger ? [trigger] : []}
+            onChange={(event) => onQ2Change(event.currentTarget.values?.[0])}
+          >
+            {Q2_OPTIONS.map((option) => (
+              <s-choice key={option.value} value={option.value}>
+                {option.label}
+              </s-choice>
+            ))}
+          </s-choice-list>
+        </>
       )}
 
       <s-stack direction="inline" justifyContent="end">
         <s-link onClick={onSkip}>{COPY.skip}</s-link>
       </s-stack>
-    </s-stack>
+      </s-stack>
+    </s-box>
   );
 }
