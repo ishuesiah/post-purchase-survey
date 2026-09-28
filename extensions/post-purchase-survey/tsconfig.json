@@ -1,0 +1,16 @@
+{
+  // This config informs the IDE/typechecker about the Preact JSX setup.
+  // Changing options here does not affect the extension build (Shopify CLI).
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact",
+    "allowJs": true,
+    "esModuleInterop": true,
+    "noEmit": true,
+    "skipLibCheck": true
+  },
+  "include": ["./src"]
+}

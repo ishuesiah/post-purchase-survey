@@ -4,6 +4,11 @@ import { ServerRouter } from "react-router";
 import { createReadableStreamFromReadable } from "@react-router/node";
 import { isbot } from "isbot";
 import { addDocumentResponseHeaders } from "./shopify.server";
+import { startSurveyWorker } from "./lib/worker.server";
+
+// Module scope runs once per server process; the worker itself guards
+// against double-starts (Vite HMR re-imports).
+startSurveyWorker();
 
 export const streamTimeout = 5000;
 

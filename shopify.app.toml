@@ -6,32 +6,9 @@ embedded = true
 name = "post-purchase-survey"
 
 [access_scopes]
-# Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
-scopes = "write_products,write_metaobjects,write_metaobject_definitions"
-
-[product.metafields.app.demo_info]
-type = "single_line_text_field"
-name = "Demo Source Info"
-description = "Tracks products created by the Shopify app template for development"
-
-  [product.metafields.app.demo_info.access]
-  admin = "merchant_read_write"
-
-[metaobjects.app.example]
-name = "Example"
-description = "An example metaobject definition created by this template"
-
-  [metaobjects.app.example.access]
-  admin = "merchant_read_write"
-
-[metaobjects.app.example.fields.title]
-name = "Title"
-type = "single_line_text_field"
-required = true
-
-[metaobjects.app.example.fields.description]
-name = "Description"
-type = "multi_line_text_field"
+# read_orders/write_orders: fetch the order email at sync time and upsert
+# the survey.* order metafields.
+scopes = "read_orders,write_orders"
 
 [webhooks]
 api_version = "2026-10"
@@ -43,6 +20,17 @@ api_version = "2026-10"
   [[webhooks.subscriptions]]
   uri = "/webhooks/app/scopes_update"
   topics = [ "app/scopes_update" ]
+
+  # Flushes pending Thank-you page answers the moment the order exists.
+  [[webhooks.subscriptions]]
+  uri = "/webhooks/orders/create"
+  topics = [ "orders/create" ]
+
+  # No customer PII is stored by this app; handlers are mostly no-ops.
+  [webhooks.privacy_compliance]
+  customer_data_request_url = "/webhooks/compliance"
+  customer_deletion_url = "/webhooks/compliance"
+  shop_deletion_url = "/webhooks/compliance"
 
 [auth]
 redirect_urls = [ "https://example.com/api/auth" ]

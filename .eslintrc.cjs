@@ -17,7 +17,7 @@ module.exports = {
   env: {
     browser: true,
     commonjs: true,
-    es6: true,
+    es2021: true,
   },
   ignorePatterns: ["!**/.server", "!**/.client"],
 
@@ -84,9 +84,24 @@ module.exports = {
         ".graphqlrc.{js,ts}",
         "shopify.server.{js,ts}",
         "**/*.server.{js,ts}",
+        // Route loaders/actions run in Node (process.env access).
+        "app/routes/**/*.{js,jsx}",
       ],
       env: {
         node: true,
+      },
+    },
+
+    // Checkout UI extensions (Preact, sandboxed Web Worker).
+    {
+      files: ["extensions/**/*.{js,jsx}"],
+      globals: {
+        // Substituted at build time by the Shopify CLI.
+        process: "readonly",
+      },
+      rules: {
+        // Preact extension components don't use the prop-types package.
+        "react/prop-types": "off",
       },
     },
   ],
