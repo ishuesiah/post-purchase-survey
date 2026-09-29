@@ -25,6 +25,12 @@ export function Survey({ surface, orderId }) {
   // Shuffle exactly once per mount so the list never jumps mid-interaction.
   const options = useMemo(() => shuffledQ1(), []);
 
+  // Checkout editor preview: the mock order id never changes, so one click
+  // would lock the preview into the thank-you state via the answered flag.
+  // In the editor we always show the survey, never persist the flag, and
+  // never post to the backend (a mock order would just create junk rows).
+  const inEditor = Boolean(shopify.extension?.editor);
+
   const [status, setStatus] = useState("loading"); // loading | survey | thanks
   const [source, setSource] = useState("");
   const [sourceDetail, setSourceDetail] = useState("");
@@ -36,6 +42,10 @@ export function Survey({ surface, orderId }) {
   // then the backend as source of truth for the order-status page,
   // which may be visited days later in a fresh session.
   useEffect(() => {
+    if (inEditor) {
+      setStatus("survey");
+      return undefined;
+    }
     let cancelled = false;
     (async () => {
       let answered = await readAnsweredFlag(orderId);
@@ -47,7 +57,7 @@ export function Survey({ surface, orderId }) {
     return () => {
       cancelled = true;
     };
-  }, [orderId, surface]);
+  }, [orderId, surface, inEditor]);
 
   // Flush any pending text debounce on unmount.
   useEffect(
@@ -58,6 +68,7 @@ export function Survey({ surface, orderId }) {
   );
 
   const send = (next) => {
+    if (inEditor) return;
     sendSurvey(orderId, surface, {
       source,
       sourceDetail,
@@ -65,6 +76,10 @@ export function Survey({ surface, orderId }) {
       trigger,
       ...next,
     });
+  };
+
+  const markAnswered = () => {
+    if (!inEditor) writeAnsweredFlag(orderId);
   };
 
   const onQ1Change = (event) => {
@@ -76,7 +91,7 @@ export function Survey({ surface, orderId }) {
     setSourceText("");
     if (debounceRef.current) clearTimeout(debounceRef.current);
     send({ source: value, sourceDetail: "", sourceText: "" });
-    writeAnsweredFlag(orderId);
+    markAnswered();
   };
 
   // The follow-up controls are nested inside the Q1 choice list, so their
@@ -117,7 +132,7 @@ export function Survey({ surface, orderId }) {
 
   const onSkip = () => {
     // Skipping stores no answer data; it only hides the survey for this order.
-    writeAnsweredFlag(orderId);
+    markAnswered();
     setStatus("thanks");
   };
 
