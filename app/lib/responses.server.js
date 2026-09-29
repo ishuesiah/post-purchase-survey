@@ -15,9 +15,19 @@ export { PERIODS, STATUS_FILTERS, parseFilters };
 
 export const PAGE_SIZE = 25;
 export const EXPORT_LIMIT = 10000;
+export const TIME_ZONE = process.env.SHOP_TIMEZONE || "America/Vancouver";
+
+/**
+ * Shop scope for the public dashboard, which has no Shopify session to read
+ * the shop from. This app is single-store, so SHOP_DOMAIN is the answer;
+ * if it is unset, queries are not scoped (null = no shop filter).
+ */
+export function dashboardShop() {
+  return process.env.SHOP_DOMAIN || null;
+}
 
 function whereFor(shop, { period, source, status }) {
-  const where = { shop };
+  const where = shop ? { shop } : {};
   if (period !== "all") {
     const days = Number(period);
     where.answeredAt = { gte: new Date(Date.now() - days * 24 * 60 * 60 * 1000) };
@@ -33,11 +43,12 @@ function whereFor(shop, { period, source, status }) {
  * the current filters.
  */
 export async function loadStats(shop, filters) {
+  const all = shop ? { shop } : {};
   const [filtered, total, pending, failed] = await Promise.all([
     db.surveyResponse.count({ where: whereFor(shop, filters) }),
-    db.surveyResponse.count({ where: { shop } }),
-    db.surveyResponse.count({ where: { shop, syncStatus: "PENDING" } }),
-    db.surveyResponse.count({ where: { shop, syncStatus: "FAILED" } }),
+    db.surveyResponse.count({ where: all }),
+    db.surveyResponse.count({ where: { ...all, syncStatus: "PENDING" } }),
+    db.surveyResponse.count({ where: { ...all, syncStatus: "FAILED" } }),
   ]);
   return { filtered, total, pending, failed };
 }
@@ -120,6 +131,37 @@ export async function loadResponses(shop, filters) {
     rows: rows.slice(0, PAGE_SIZE).map(presentRow),
     hasNextPage,
     hasPreviousPage: filters.page > 1,
+  };
+}
+
+/**
+ * Everything a dashboard page needs, in one call. Used by both the embedded
+ * admin page and the public Google-authenticated page so they can't drift.
+ */
+export async function loadDashboardData(shop, filters, timeZone = TIME_ZONE) {
+  const [stats, sources, triggers, responses] = await Promise.all([
+    loadStats(shop, filters),
+    loadSourceBreakdown(shop, filters),
+    loadTriggerBreakdown(shop, filters),
+    loadResponses(shop, filters),
+  ]);
+  const formatter = new Intl.DateTimeFormat("en-CA", {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone,
+  });
+  return {
+    stats,
+    sources,
+    triggers,
+    responses: {
+      ...responses,
+      rows: responses.rows.map((row) => ({
+        ...row,
+        answeredAtLabel: formatter.format(new Date(row.answeredAt)),
+      })),
+    },
+    timeZone,
   };
 }
 

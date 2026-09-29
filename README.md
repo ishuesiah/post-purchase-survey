@@ -24,7 +24,10 @@ Key design point: on the Thank-you page **the order does not exist yet** in the 
 | Behavior | File |
 | --- | --- |
 | Survey UI (both pages) | `extensions/post-purchase-survey/src/Survey.jsx` |
-| Admin dashboard (app home): stats, breakdowns, responses table, CSV export | `app/routes/app._index.jsx` |
+| Public dashboard at `/` (Google sign-in, plain HTML) | `app/routes/_index/route.jsx`, `app/styles/dashboard.module.css` |
+| Google sign-in: session cookie, OAuth start/callback, logout | `app/lib/dashboard-auth.server.js`, `app/routes/login*.jsx`, `app/routes/logout.jsx` |
+| Public CSV export | `app/routes/export[.]csv.jsx` |
+| Embedded admin dashboard (app home inside Shopify admin) | `app/routes/app._index.jsx` |
 | Dashboard queries (read-only Prisma read-model) | `app/lib/responses.server.js` |
 | Dashboard filter definitions (client-safe, no server imports) | `app/lib/survey-filters.js` |
 | Value → label maps for the dashboard/CSV (imports the extension's questions.js) | `app/lib/survey-labels.server.js` |
@@ -41,13 +44,29 @@ Key design point: on the Thank-you page **the order does not exist yet** in the 
 
 ## Viewing responses
 
-Open the app in Shopify admin (Apps → post-purchase-survey). The home page is a read-only dashboard over the `SurveyResponse` table:
+Two dashboards show the same data (both read the `SurveyResponse` table through `app/lib/responses.server.js`):
+
+1. **Public dashboard at the app URL** (`https://post-purchase-survey-7g5op.sevalla.app/`), behind Google sign-in restricted to `@hemlockandoak.com` accounts. Plain HTML, works in any browser, CSV export is a normal link (`/export.csv`). This is the one to bookmark.
+2. **Embedded page inside Shopify admin** (Apps → post-purchase-survey), built with Polaris web components.
+
+### Google sign-in setup (public dashboard)
+
+Mirrors the Parcel Scanner (WAYPOST) login and reuses its Google OAuth client.
+
+1. Google Cloud console → the existing OAuth 2.0 client used by WAYPOST → **Authorised redirect URIs** → add `https://post-purchase-survey-7g5op.sevalla.app/login/google/callback` (must match `SHOPIFY_APP_URL` exactly).
+2. Sevalla → env vars → set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` (copy from the WAYPOST app's env). Optionally `DASHBOARD_SESSION_SECRET`; without it the session cookie is signed with `SHOPIFY_API_SECRET`.
+3. Until both Google vars are set, `/login` shows a "not configured" message and nothing is exposed.
+
+How it works (`app/lib/dashboard-auth.server.js`): `/login/google` stores a random `state` + `nonce` in a signed, HttpOnly, SameSite=Lax cookie and redirects to Google; `/login/google/callback` checks the state, exchanges the code server-side, validates the id_token claims (issuer, audience, expiry, nonce, `email_verified`, domain) and starts a fresh session. Sessions expire after 30 minutes of inactivity or 12 hours absolute. `/logout` is POST-only. Route paths deliberately avoid `/auth/*`, which belongs to the Shopify app-install flow (`auth.$.jsx`, `auth.login/`).
+
+### What the dashboard shows
 
 - **Overview**: responses in the selected period, all-time total, and how many rows are still `PENDING` or `FAILED` to sync.
 - **Filters** (period / source / sync status) live in the URL query string, so a filtered view can be bookmarked. The source filter narrows the responses table and Q2 breakdown but is deliberately ignored by the Q1 breakdown so the channel split always shows every source.
 - **Breakdown tables** show Q1 by source (with the paid/organic follow-up split per channel) and Q2 by trigger.
-- **Responses table**: 25 per page, newest first, each order id links to the order in admin (`shopify:admin/orders/<id>`). Failed rows show the last sync error inline.
-- **Export CSV** (page primary action) downloads every response matching the current filters, capped at 10 000 rows. It is a `useFetcher` POST rather than a GET link because a plain link inside the embedded iframe cannot carry the session token. Free-text cells that start with `= + - @` are prefixed with `'` to block spreadsheet formula injection.
+- **Responses table**: 25 per page, newest first, each order id links to the order in admin. Failed rows show the last sync error inline.
+- **Export CSV** downloads every response matching the current filters, capped at 10 000 rows. On the embedded page it is a `useFetcher` POST (a plain link inside the iframe cannot carry the session token); on the public page it is a GET to `/export.csv`. Free-text cells that start with `= + - @` are prefixed with `'` to block spreadsheet formula injection.
+- The public dashboard scopes queries to `SHOP_DOMAIN` (single-store app); the embedded page uses the admin session's shop.
 
 The same data also lands on each order as `survey.*` metafields (create definitions under Settings → Custom data → Orders to make them readable there) and on the Klaviyo profile as `hdyhau_source`, `hdyhau_detail`, `purchase_trigger`.
 

@@ -1,0 +1,294 @@
+/* Public (non-embedded) dashboard + login page. Polaris web components only
+   exist inside Shopify admin, so this page is plain HTML with its own styles. */
+
+.page {
+  --ink: #1f1f1d;
+  --muted: #6b6a66;
+  --line: #e3e1dc;
+  --card: #ffffff;
+  --bg: #f6f5f2;
+  --accent: #46415f;
+  --success: #1f7a4d;
+  --info: #2f68c4;
+  --critical: #b3261e;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.page *,
+.page *::before,
+.page *::after {
+  box-sizing: border-box;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 24px;
+  background: var(--card);
+  border-bottom: 1px solid var(--line);
+}
+
+.brand {
+  margin: 0;
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.headerTitle {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+}
+
+.main {
+  width: min(1200px, 100%);
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+  display: grid;
+  gap: 20px;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 18px 20px;
+}
+
+.cardTitle {
+  margin: 0 0 12px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
+}
+
+.stat {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+
+.statLabel {
+  margin: 0 0 4px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.statValue {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+.statValueInfo { color: var(--info); }
+.statValueCritical { color: var(--critical); }
+
+.filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  align-items: end;
+}
+
+.field {
+  display: grid;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.select {
+  min-height: 38px;
+  padding: 6px 10px;
+  border: 1px solid #b9b6b0;
+  border-radius: 6px;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+}
+
+.button,
+.buttonSecondary,
+.googleButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 38px;
+  padding: 8px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.buttonSecondary {
+  background: #fff;
+  color: var(--accent);
+}
+
+.button:focus-visible,
+.buttonSecondary:focus-visible,
+.googleButton:focus-visible,
+.select:focus-visible,
+.link:focus-visible {
+  outline: 3px solid var(--info);
+  outline-offset: 2px;
+}
+
+.tableWrap {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td {
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+
+.table th {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.numeric {
+  text-align: right !important;
+  font-variant-numeric: tabular-nums;
+}
+
+.link {
+  color: var(--info);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  background: #eceaf3;
+  color: var(--accent);
+}
+
+.badgeSuccess { background: #e2f3ea; color: var(--success); }
+.badgeInfo { background: #e4edfb; color: var(--info); }
+.badgeCritical { background: #fbe5e3; color: var(--critical); }
+
+.errorText {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.empty {
+  margin: 0;
+  color: var(--muted);
+}
+
+/* Login */
+
+.loginPage {
+  composes: page;
+  display: grid;
+  place-items: center;
+  padding: 24px 16px;
+}
+
+.loginCard {
+  composes: card;
+  width: min(420px, 100%);
+  display: grid;
+  gap: 12px;
+  text-align: center;
+  padding: 28px 24px;
+}
+
+.loginTitle {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.googleButton {
+  background: #fff;
+  color: var(--ink);
+  border-color: #b9b6b0;
+  justify-self: center;
+  min-width: 240px;
+}
+
+.notice {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: #e4edfb;
+  color: var(--info);
+}
+
+.error {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: #fbe5e3;
+  color: var(--critical);
+}
