@@ -8,54 +8,20 @@ import {
 } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
-import {
-  exportCsv,
-  loadResponses,
-  loadSourceBreakdown,
-  loadStats,
-  loadTriggerBreakdown,
-} from "../lib/responses.server";
+import { exportCsv, loadDashboardData } from "../lib/responses.server";
 import { SOURCE_OPTIONS } from "../lib/survey-labels.server";
 import { PERIODS, STATUS_FILTERS, parseFilters } from "../lib/survey-filters";
 
-// Survey responses dashboard (app home). Read-only view over the
-// SurveyResponse table for the installed shop. Filters live in the URL so
-// a view can be bookmarked or shared; the CSV export reuses the same filters.
-
-const TIME_ZONE = process.env.SHOP_TIMEZONE || "America/Vancouver";
+// Survey responses dashboard (app home, embedded in Shopify admin).
+// Read-only view over the SurveyResponse table for the installed shop.
+// Filters live in the URL so a view can be bookmarked; the CSV export reuses
+// them. The same data also powers the public Google-authenticated page at "/".
 
 export const loader = async ({ request }) => {
   const { session } = await authenticate.admin(request);
-  const url = new URL(request.url);
-  const filters = parseFilters(url);
-  const shop = session.shop;
-
-  const [stats, sources, triggers, responses] = await Promise.all([
-    loadStats(shop, filters),
-    loadSourceBreakdown(shop, filters),
-    loadTriggerBreakdown(shop, filters),
-    loadResponses(shop, filters),
-  ]);
-
-  const formatter = new Intl.DateTimeFormat("en-CA", {
-    dateStyle: "medium",
-    timeStyle: "short",
-    timeZone: TIME_ZONE,
-  });
-  const rows = responses.rows.map((row) => ({
-    ...row,
-    answeredAtLabel: formatter.format(new Date(row.answeredAt)),
-  }));
-
-  return {
-    filters,
-    stats,
-    sources,
-    triggers,
-    responses: { ...responses, rows },
-    sourceOptions: SOURCE_OPTIONS,
-    timeZone: TIME_ZONE,
-  };
+  const filters = parseFilters(new URL(request.url));
+  const data = await loadDashboardData(session.shop, filters);
+  return { filters, ...data, sourceOptions: SOURCE_OPTIONS };
 };
 
 // POST intent=export: returns CSV text for the current filters. The client
