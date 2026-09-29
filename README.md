@@ -55,6 +55,8 @@ See `.env.example` for the full annotated list. Secrets (`SHOPIFY_API_SECRET`, `
 
 - **`SURVEY_API_URL` is a build-time constant** in the extension (`process.env.SURVEY_API_URL` in `src/api.js` is substituted by the Shopify CLI). Changing the backend URL requires re-running `shopify app deploy`.
 - **Allow-lists are duplicated on purpose**: `app/lib/survey-validation.server.js` must stay in sync with `extensions/post-purchase-survey/src/questions.js`. Bump `SURVEY_VERSION` in both when options change.
+- **Slot names are kebab-case in HTML.** `s-choice` follow-ups must use `slot="selected-content"` (not the `selectedContent` spelling from the TypeScript types). A wrong slot name silently drops the content into the label slot, so follow-ups render under *every* option instead of only the selected one.
+- The survey card layout (bordered box, `variant="block"` choice lists, inline follow-ups, divider before Q2) mirrors the designer's `mockup.html`; colours come from checkout branding, extensions cannot set CSS.
 - The extension **fails silently by design** — network errors never surface on the checkout page. Debug via backend logs, not the storefront.
 - `order_id` is client-supplied (session token proves the caller is our extension, not which order they own). Accepted risk for a low-stakes survey; documented in `app/routes/api.survey.jsx`.
 - No customer PII is stored: the order email is fetched from the Admin API at sync time and passed straight to Klaviyo. Don't add an email column without revisiting the compliance webhook handlers.
