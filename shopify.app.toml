@@ -1,7 +1,7 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
 client_id = "90aa57a04a89523207a86532f823bbd6"
-application_url = "https://example.com"
+application_url = "https://post-purchase-survey-7g5op.sevalla.app"
 embedded = true
 name = "post-purchase-survey"
 
@@ -33,8 +33,7 @@ api_version = "2026-10"
   shop_deletion_url = "/webhooks/compliance"
 
 [auth]
-redirect_urls = [ "https://example.com/api/auth" ]
+redirect_urls = [ "https://post-purchase-survey-7g5op.sevalla.app/api/auth" ]
 
 [build]
-include_config_on_deploy = true
 automatically_update_urls_on_dev = true
