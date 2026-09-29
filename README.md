@@ -24,6 +24,10 @@ Key design point: on the Thank-you page **the order does not exist yet** in the 
 | Behavior | File |
 | --- | --- |
 | Survey UI (both pages) | `extensions/post-purchase-survey/src/Survey.jsx` |
+| Admin dashboard (app home): stats, breakdowns, responses table, CSV export | `app/routes/app._index.jsx` |
+| Dashboard queries (read-only Prisma read-model) | `app/lib/responses.server.js` |
+| Dashboard filter definitions (client-safe, no server imports) | `app/lib/survey-filters.js` |
+| Value → label maps for the dashboard/CSV (imports the extension's questions.js) | `app/lib/survey-labels.server.js` |
 | Questions/options/copy | `extensions/post-purchase-survey/src/questions.js` |
 | Extension → backend calls | `extensions/post-purchase-survey/src/api.js` |
 | Extension targets + capabilities | `extensions/post-purchase-survey/shopify.extension.toml` |
@@ -34,6 +38,20 @@ Key design point: on the Thank-you page **the order does not exist yet** in the 
 | orders/create webhook (HMAC, dedupe) | `app/routes/webhooks.orders.create.jsx` |
 | Retry worker (started from `app/entry.server.jsx`) | `app/lib/worker.server.js` |
 | DB models (`SurveyResponse`, `ProcessedWebhook`) | `prisma/schema.prisma` |
+
+## Viewing responses
+
+Open the app in Shopify admin (Apps → post-purchase-survey). The home page is a read-only dashboard over the `SurveyResponse` table:
+
+- **Overview**: responses in the selected period, all-time total, and how many rows are still `PENDING` or `FAILED` to sync.
+- **Filters** (period / source / sync status) live in the URL query string, so a filtered view can be bookmarked. The source filter narrows the responses table and Q2 breakdown but is deliberately ignored by the Q1 breakdown so the channel split always shows every source.
+- **Breakdown tables** show Q1 by source (with the paid/organic follow-up split per channel) and Q2 by trigger.
+- **Responses table**: 25 per page, newest first, each order id links to the order in admin (`shopify:admin/orders/<id>`). Failed rows show the last sync error inline.
+- **Export CSV** (page primary action) downloads every response matching the current filters, capped at 10 000 rows. It is a `useFetcher` POST rather than a GET link because a plain link inside the embedded iframe cannot carry the session token. Free-text cells that start with `= + - @` are prefixed with `'` to block spreadsheet formula injection.
+
+The same data also lands on each order as `survey.*` metafields (create definitions under Settings → Custom data → Orders to make them readable there) and on the Klaviyo profile as `hdyhau_source`, `hdyhau_detail`, `purchase_trigger`.
+
+Times on the dashboard are shown in `SHOP_TIMEZONE` (default `America/Vancouver`).
 
 ## Environment variables
 
