@@ -40,6 +40,7 @@ model SurveyResponse {
   sourceDetail String?
   sourceText   String?
   trigger      String?
+  suggestions  String? // free-text future product suggestions (Q3)
   surface      String // thank_you | order_status
   version      Int       @default(1)
   answeredAt   DateTime  @default(now()) // first answer time

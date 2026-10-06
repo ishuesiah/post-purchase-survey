@@ -2,12 +2,15 @@
 // pushed to Klaviyo, so they must stay in sync with the backend allow-lists in
 // app/lib/survey-validation.server.js. Bump SURVEY_VERSION whenever options change.
 
-export const SURVEY_VERSION = 1;
+export const SURVEY_VERSION = 2;
 
 export const COPY = {
   heading: "Quick question",
   q1Label: "How did you first hear about Hemlock & Oak?",
   q2Label: "What made today the day?",
+  q3Label: "If you have any suggestions for future products, let us know below:",
+  q3FieldLabel: "Your suggestions",
+  send: "Send",
   skip: "Skip",
   thanks: "Thank you! That really helps a small team like ours.",
   optionalText: "Tell us more (optional)",

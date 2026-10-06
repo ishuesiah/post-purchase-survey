@@ -67,8 +67,16 @@ export async function action({ request }) {
     throw cors(Response.json({ error: result.error }, { status: 422 }));
   }
 
-  const { orderId, surface, version, source, sourceDetail, sourceText, trigger } =
-    result.data;
+  const {
+    orderId,
+    surface,
+    version,
+    source,
+    sourceDetail,
+    sourceText,
+    trigger,
+    suggestions,
+  } = result.data;
 
   // Snapshot upsert: the extension always sends the full current answer set,
   // and serializes its requests, so overwrite-all is safe and idempotent.
@@ -84,12 +92,14 @@ export async function action({ request }) {
       sourceDetail,
       sourceText,
       trigger,
+      suggestions,
     },
     update: {
       source,
       sourceDetail,
       sourceText,
       trigger,
+      suggestions,
       surface,
       version,
       syncStatus: "PENDING",
@@ -129,6 +139,7 @@ export async function loader({ request }) {
       source_detail: row.sourceDetail,
       source_text: row.sourceText,
       trigger: row.trigger,
+      suggestions: row.suggestions,
     }),
   );
 }

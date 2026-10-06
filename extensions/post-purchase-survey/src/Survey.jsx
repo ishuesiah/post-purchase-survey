@@ -36,7 +36,11 @@ export function Survey({ surface, orderId }) {
   const [sourceDetail, setSourceDetail] = useState("");
   const [sourceText, setSourceText] = useState("");
   const [trigger, setTrigger] = useState("");
+  const [suggestions, setSuggestions] = useState("");
+  // Q3 (product suggestions) appears after Q2 is answered or skipped.
+  const [suggestionsOpen, setSuggestionsOpen] = useState(false);
   const debounceRef = useRef(null);
+  const suggestionsDebounceRef = useRef(null);
 
   // Already-answered check: local storage flag first (both surfaces),
   // then the backend as source of truth for the order-status page,
@@ -59,10 +63,11 @@ export function Survey({ surface, orderId }) {
     };
   }, [orderId, surface, inEditor]);
 
-  // Flush any pending text debounce on unmount.
+  // Clear any pending text debounces on unmount.
   useEffect(
     () => () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
+      if (suggestionsDebounceRef.current) clearTimeout(suggestionsDebounceRef.current);
     },
     [],
   );
@@ -74,6 +79,7 @@ export function Survey({ surface, orderId }) {
       sourceDetail,
       sourceText,
       trigger,
+      suggestions,
       ...next,
     });
   };
@@ -127,11 +133,42 @@ export function Survey({ surface, orderId }) {
     if (!value) return;
     setTrigger(value);
     send({ trigger: value });
+    setSuggestionsOpen(true);
+  };
+
+  // Q3 free text: debounce-save while typing (like sourceText) so answers
+  // survive the customer leaving without pressing Send.
+  const onSuggestionsInput = (event) => {
+    const value = event.currentTarget.value;
+    setSuggestions(value);
+    if (suggestionsDebounceRef.current) clearTimeout(suggestionsDebounceRef.current);
+    suggestionsDebounceRef.current = setTimeout(() => {
+      send({ suggestions: value });
+    }, TEXT_DEBOUNCE_MS);
+  };
+
+  const onSuggestionsCommit = (event) => {
+    const value = event.currentTarget.value;
+    if (suggestionsDebounceRef.current) clearTimeout(suggestionsDebounceRef.current);
+    setSuggestions(value);
+    send({ suggestions: value });
+  };
+
+  const onSuggestionsSend = () => {
+    if (suggestionsDebounceRef.current) clearTimeout(suggestionsDebounceRef.current);
+    send({ suggestions });
+    markAnswered();
     setStatus("thanks");
   };
 
   const onSkip = () => {
-    // Skipping stores no answer data; it only hides the survey for this order.
+    // Mirrors the approved mock-up: skipping while Q2 is on screen reveals
+    // the suggestions step; skipping anywhere else dismisses the survey.
+    if (source && !suggestionsOpen) {
+      setSuggestionsOpen(true);
+      return;
+    }
+    if (suggestionsDebounceRef.current) clearTimeout(suggestionsDebounceRef.current);
     markAnswered();
     setStatus("thanks");
   };
@@ -214,8 +251,27 @@ export function Survey({ surface, orderId }) {
           </>
         )}
 
-        <s-stack direction="inline" justifyContent="end">
+        {suggestionsOpen && (
+          <>
+            <s-divider />
+            <s-text type="strong">{COPY.q3Label}</s-text>
+            <s-text-area
+              label={COPY.q3FieldLabel}
+              labelAccessibilityVisibility="exclusive"
+              name="suggestions"
+              rows={3}
+              value={suggestions}
+              onInput={onSuggestionsInput}
+              onChange={onSuggestionsCommit}
+            />
+          </>
+        )}
+
+        <s-stack direction="inline" justifyContent="end" alignItems="center" gap="base">
           <s-link onClick={onSkip}>{COPY.skip}</s-link>
+          {suggestionsOpen && (
+            <s-button onClick={onSuggestionsSend}>{COPY.send}</s-button>
+          )}
         </s-stack>
       </s-stack>
     </SurveyCard>

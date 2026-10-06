@@ -4,7 +4,11 @@
 // fields (detail/text/trigger) are stripped to null when invalid rather
 // than rejected, so a stale client can never block a save.
 
-export const SURVEY_VERSION = 1;
+export const SURVEY_VERSION = 2;
+
+// Accept the previous version during rollout: already-loaded checkout pages
+// keep the old extension bundle and must still be able to save.
+const SUPPORTED_VERSIONS = new Set([1, SURVEY_VERSION]);
 
 export const SURFACES = new Set(["thank_you", "order_status"]);
 
@@ -61,6 +65,7 @@ const ALLOWED_FIELDS = new Set([
   "source_detail",
   "source_text",
   "trigger",
+  "suggestions",
 ]);
 
 /**
@@ -99,7 +104,7 @@ export function validateSurveyPayload(body) {
     return { ok: false, error: "Invalid or missing surface" };
   }
 
-  if (body.version !== SURVEY_VERSION) {
+  if (!SUPPORTED_VERSIONS.has(body.version)) {
     return { ok: false, error: "Unsupported survey version" };
   }
 
@@ -130,16 +135,26 @@ export function validateSurveyPayload(body) {
     trigger = body.trigger;
   }
 
+  // Free-text product suggestions (Q3). Newlines are allowed; the sync layer
+  // writes this as a multi_line_text_field metafield.
+  let suggestions = null;
+  if (typeof body.suggestions === "string") {
+    const trimmed = body.suggestions.trim().slice(0, MAX_TEXT_LENGTH);
+    if (trimmed) suggestions = trimmed;
+  }
+
   return {
     ok: true,
     data: {
       orderId,
       surface: body.surface,
-      version: SURVEY_VERSION,
+      // Store the client's version so v1 rows (no Q3 asked) stay distinguishable.
+      version: body.version,
       source,
       sourceDetail,
       sourceText,
       trigger,
+      suggestions,
     },
   };
 }
