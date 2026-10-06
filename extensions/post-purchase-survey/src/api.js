@@ -22,6 +22,7 @@ export function sendSurvey(orderId, surface, answers) {
     source_detail: answers.sourceDetail || null,
     source_text: answers.sourceText || null,
     trigger: answers.trigger || null,
+    suggestions: answers.suggestions || null,
   });
   chain = chain.then(async () => {
     try {

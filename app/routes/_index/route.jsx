@@ -218,6 +218,7 @@ export default function PublicDashboard() {
                       <th>Follow-up</th>
                       <th>Free text</th>
                       <th>Trigger</th>
+                      <th>Suggestions</th>
                       <th>Page</th>
                       <th>Sync</th>
                     </tr>
@@ -240,6 +241,7 @@ export default function PublicDashboard() {
                         <td>{row.detailLabel}</td>
                         <td>{row.sourceText}</td>
                         <td>{row.triggerLabel}</td>
+                        <td>{row.suggestions}</td>
                         <td>{row.surfaceLabel}</td>
                         <td>
                           <span className={`${styles.badge} ${statusClass(row.syncStatus)}`}>

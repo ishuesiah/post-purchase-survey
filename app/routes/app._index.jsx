@@ -210,6 +210,7 @@ export default function ResponsesDashboard() {
               <s-table-header>Follow-up</s-table-header>
               <s-table-header>Free text</s-table-header>
               <s-table-header>Trigger</s-table-header>
+              <s-table-header>Suggestions</s-table-header>
               <s-table-header>Page</s-table-header>
               <s-table-header listSlot="labeled">Sync</s-table-header>
             </s-table-header-row>
@@ -226,6 +227,7 @@ export default function ResponsesDashboard() {
                   <s-table-cell>{row.detailLabel}</s-table-cell>
                   <s-table-cell>{row.sourceText}</s-table-cell>
                   <s-table-cell>{row.triggerLabel}</s-table-cell>
+                  <s-table-cell>{row.suggestions}</s-table-cell>
                   <s-table-cell>{row.surfaceLabel}</s-table-cell>
                   <s-table-cell>
                     <s-badge tone={statusTone(row.syncStatus)}>{row.statusLabel}</s-badge>

@@ -41,6 +41,16 @@ function buildMetafields(ownerId, row) {
     single("source_text", row.sourceText),
     single("trigger", row.trigger),
     single("surface", row.surface),
+    // Multi-line: customers may use line breaks, which single_line rejects.
+    row.suggestions == null
+      ? null
+      : {
+          ownerId,
+          namespace: "survey",
+          key: "suggestions",
+          type: "multi_line_text_field",
+          value: row.suggestions,
+        },
     {
       ownerId,
       namespace: "survey",
