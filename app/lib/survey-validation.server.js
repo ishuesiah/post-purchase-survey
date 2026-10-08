@@ -4,11 +4,11 @@
 // fields (detail/text/trigger) are stripped to null when invalid rather
 // than rejected, so a stale client can never block a save.
 
-export const SURVEY_VERSION = 2;
+export const SURVEY_VERSION = 3;
 
 // Accept the previous version during rollout: already-loaded checkout pages
 // keep the old extension bundle and must still be able to save.
-const SUPPORTED_VERSIONS = new Set([1, SURVEY_VERSION]);
+const SUPPORTED_VERSIONS = new Set([2, SURVEY_VERSION]);
 
 export const SURFACES = new Set(["thank_you", "order_status"]);
 
@@ -34,6 +34,7 @@ export const SOURCES = new Set([
   "tiktok",
   "youtube",
   "google",
+  "google_ad",
   "friend",
   "gift",
   "creator",
