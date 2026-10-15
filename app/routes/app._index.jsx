@@ -27,6 +27,8 @@ export const loader = async ({ request }) => {
 // POST intent=export: returns CSV text for the current filters. The client
 // turns it into a download; a plain GET link can't carry the embedded-app
 // session token, which is why this is a fetcher action and not a resource route.
+// The fetcher must target "?index&..." because an explicit action without the
+// bare index param posts to the parent app.jsx layout, which has no action (405).
 export const action = async ({ request }) => {
   const { session } = await authenticate.admin(request);
   const form = await request.formData();
@@ -66,7 +68,7 @@ export default function ResponsesDashboard() {
   const runExport = () => {
     exporter.submit(
       { intent: "export" },
-      { method: "post", action: `?${searchParams.toString()}` },
+      { method: "post", action: `?index&${searchParams.toString()}` },
     );
   };
 
