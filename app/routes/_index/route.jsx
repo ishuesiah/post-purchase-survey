@@ -240,7 +240,11 @@ export default function PublicDashboard() {
                         <td>{row.sourceLabel}</td>
                         <td>{row.detailLabel}</td>
                         <td>{row.sourceText}</td>
-                        <td>{row.triggerLabel}</td>
+                        <td>
+                          {row.triggerText
+                            ? `${row.triggerLabel}: ${row.triggerText}`
+                            : row.triggerLabel}
+                        </td>
                         <td>{row.suggestions}</td>
                         <td>{row.surfaceLabel}</td>
                         <td>

@@ -40,6 +40,7 @@ function buildMetafields(ownerId, row) {
     single("source_detail", row.sourceDetail),
     single("source_text", row.sourceText),
     single("trigger", row.trigger),
+    single("trigger_text", row.triggerText),
     single("surface", row.surface),
     // Multi-line: customers may use line breaks, which single_line rejects.
     row.suggestions == null

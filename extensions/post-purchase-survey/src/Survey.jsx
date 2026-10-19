@@ -36,10 +36,12 @@ export function Survey({ surface, orderId }) {
   const [sourceDetail, setSourceDetail] = useState("");
   const [sourceText, setSourceText] = useState("");
   const [trigger, setTrigger] = useState("");
+  const [triggerText, setTriggerText] = useState("");
   const [suggestions, setSuggestions] = useState("");
   // Q3 (product suggestions) appears after Q2 is answered or skipped.
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
   const debounceRef = useRef(null);
+  const triggerTextDebounceRef = useRef(null);
   const suggestionsDebounceRef = useRef(null);
 
   // Already-answered check: local storage flag first (both surfaces),
@@ -67,6 +69,7 @@ export function Survey({ surface, orderId }) {
   useEffect(
     () => () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
+      if (triggerTextDebounceRef.current) clearTimeout(triggerTextDebounceRef.current);
       if (suggestionsDebounceRef.current) clearTimeout(suggestionsDebounceRef.current);
     },
     [],
@@ -79,6 +82,7 @@ export function Survey({ surface, orderId }) {
       sourceDetail,
       sourceText,
       trigger,
+      triggerText,
       suggestions,
       ...next,
     });
@@ -130,10 +134,33 @@ export function Survey({ surface, orderId }) {
 
   const onQ2Change = (event) => {
     const value = event.currentTarget.values?.[0];
-    if (!value) return;
+    if (!value || value === trigger) return;
     setTrigger(value);
-    send({ trigger: value });
+    // New trigger: previous free text no longer applies.
+    setTriggerText("");
+    if (triggerTextDebounceRef.current) clearTimeout(triggerTextDebounceRef.current);
+    send({ trigger: value, triggerText: "" });
     setSuggestionsOpen(true);
+  };
+
+  // Like the Q1 follow-up handlers: the text field is nested inside the Q2
+  // choice list, so stop its events from bubbling into onQ2Change.
+  const onTriggerTextInput = (event) => {
+    event.stopPropagation();
+    const value = event.currentTarget.value;
+    setTriggerText(value);
+    if (triggerTextDebounceRef.current) clearTimeout(triggerTextDebounceRef.current);
+    triggerTextDebounceRef.current = setTimeout(() => {
+      send({ triggerText: value });
+    }, TEXT_DEBOUNCE_MS);
+  };
+
+  const onTriggerTextCommit = (event) => {
+    event.stopPropagation();
+    const value = event.currentTarget.value;
+    if (triggerTextDebounceRef.current) clearTimeout(triggerTextDebounceRef.current);
+    setTriggerText(value);
+    send({ triggerText: value });
   };
 
   // Q3 free text: debounce-save while typing (like sourceText) so answers
@@ -245,6 +272,17 @@ export function Survey({ surface, orderId }) {
               {Q2_OPTIONS.map((option) => (
                 <s-choice key={option.value} value={option.value}>
                   {option.label}
+                  {option.text !== undefined && (
+                    <s-stack slot="selected-content" gap="base">
+                      <s-text-field
+                        label={option.text || COPY.optionalText}
+                        name="trigger-text"
+                        value={triggerText}
+                        onInput={onTriggerTextInput}
+                        onChange={onTriggerTextCommit}
+                      />
+                    </s-stack>
+                  )}
                 </s-choice>
               ))}
             </s-choice-list>

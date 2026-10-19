@@ -228,7 +228,11 @@ export default function ResponsesDashboard() {
                   <s-table-cell>{row.sourceLabel}</s-table-cell>
                   <s-table-cell>{row.detailLabel}</s-table-cell>
                   <s-table-cell>{row.sourceText}</s-table-cell>
-                  <s-table-cell>{row.triggerLabel}</s-table-cell>
+                  <s-table-cell>
+                    {row.triggerText
+                      ? `${row.triggerLabel}: ${row.triggerText}`
+                      : row.triggerLabel}
+                  </s-table-cell>
                   <s-table-cell>{row.suggestions}</s-table-cell>
                   <s-table-cell>{row.surfaceLabel}</s-table-cell>
                   <s-table-cell>
