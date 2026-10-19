@@ -4,11 +4,11 @@
 // fields (detail/text/trigger) are stripped to null when invalid rather
 // than rejected, so a stale client can never block a save.
 
-export const SURVEY_VERSION = 3;
+export const SURVEY_VERSION = 4;
 
 // Accept the previous version during rollout: already-loaded checkout pages
 // keep the old extension bundle and must still be able to save.
-const SUPPORTED_VERSIONS = new Set([2, SURVEY_VERSION]);
+const SUPPORTED_VERSIONS = new Set([3, SURVEY_VERSION]);
 
 export const SURFACES = new Set(["thank_you", "order_status"]);
 
@@ -37,6 +37,8 @@ export const SOURCES = new Set([
   "google_ad",
   "friend",
   "gift",
+  "bought_before",
+  "ai_assistant",
   "creator",
   "article",
   "podcast",
@@ -57,6 +59,8 @@ export const TRIGGERS = new Set([
 ]);
 
 const MAX_TEXT_LENGTH = 500;
+// Suggestions get more room: answers were being cut off mid-sentence at 500.
+const MAX_SUGGESTIONS_LENGTH = 2000;
 
 const ALLOWED_FIELDS = new Set([
   "order_id",
@@ -66,6 +70,7 @@ const ALLOWED_FIELDS = new Set([
   "source_detail",
   "source_text",
   "trigger",
+  "trigger_text",
   "suggestions",
 ]);
 
@@ -136,11 +141,18 @@ export function validateSurveyPayload(body) {
     trigger = body.trigger;
   }
 
+  // Free text for Q2's "Something else"; stripped unless that option is chosen.
+  let triggerText = null;
+  if (trigger === "other" && typeof body.trigger_text === "string") {
+    const trimmed = body.trigger_text.trim().slice(0, MAX_TEXT_LENGTH);
+    if (trimmed) triggerText = trimmed;
+  }
+
   // Free-text product suggestions (Q3). Newlines are allowed; the sync layer
   // writes this as a multi_line_text_field metafield.
   let suggestions = null;
   if (typeof body.suggestions === "string") {
-    const trimmed = body.suggestions.trim().slice(0, MAX_TEXT_LENGTH);
+    const trimmed = body.suggestions.trim().slice(0, MAX_SUGGESTIONS_LENGTH);
     if (trimmed) suggestions = trimmed;
   }
 
@@ -155,6 +167,7 @@ export function validateSurveyPayload(body) {
       sourceDetail,
       sourceText,
       trigger,
+      triggerText,
       suggestions,
     },
   };

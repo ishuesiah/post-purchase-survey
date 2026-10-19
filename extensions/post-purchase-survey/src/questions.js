@@ -2,7 +2,7 @@
 // pushed to Klaviyo, so they must stay in sync with the backend allow-lists in
 // app/lib/survey-validation.server.js. Bump SURVEY_VERSION whenever options change.
 
-export const SURVEY_VERSION = 3;
+export const SURVEY_VERSION = 4;
 
 export const COPY = {
   heading: "Quick question",
@@ -29,6 +29,8 @@ export const Q1_OPTIONS = [
   { value: "google_ad", label: "Google ad" },
   { value: "friend", label: "A friend or family member" },
   { value: "gift", label: "I received one as a gift" },
+  { value: "bought_before", label: "I've bought from you before" },
+  { value: "ai_assistant", label: "AI assistant (ChatGPT, Claude, Gemini…)" },
   { value: "creator", label: "A creator or influencer", text: "Who?" },
   { value: "article", label: "A blog, article or gift guide", text: "Which one?" },
   { value: "podcast", label: "A podcast", text: "Which one?" },
@@ -66,7 +68,7 @@ export const Q2_OPTIONS = [
   { value: "gift_for", label: "It's a gift for someone" },
   { value: "offer", label: "A sale or special offer" },
   { value: "new_design", label: "A new colour or layout caught my eye" },
-  { value: "other", label: "Something else" },
+  { value: "other", label: "Something else", text: "" },
 ];
 
 // Fisher-Yates shuffle of the main options, pinned options appended.

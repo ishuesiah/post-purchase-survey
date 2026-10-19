@@ -75,6 +75,7 @@ export async function action({ request }) {
     sourceDetail,
     sourceText,
     trigger,
+    triggerText,
     suggestions,
   } = result.data;
 
@@ -92,6 +93,7 @@ export async function action({ request }) {
       sourceDetail,
       sourceText,
       trigger,
+      triggerText,
       suggestions,
     },
     update: {
@@ -99,6 +101,7 @@ export async function action({ request }) {
       sourceDetail,
       sourceText,
       trigger,
+      triggerText,
       suggestions,
       surface,
       version,
@@ -139,6 +142,7 @@ export async function loader({ request }) {
       source_detail: row.sourceDetail,
       source_text: row.sourceText,
       trigger: row.trigger,
+      trigger_text: row.triggerText,
       suggestions: row.suggestions,
     }),
   );
