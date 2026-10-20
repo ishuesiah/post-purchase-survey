@@ -4,16 +4,16 @@
 // fields (detail/text/trigger) are stripped to null when invalid rather
 // than rejected, so a stale client can never block a save.
 
-export const SURVEY_VERSION = 4;
+export const SURVEY_VERSION = 5;
 
 // Accept the previous version during rollout: already-loaded checkout pages
 // keep the old extension bundle and must still be able to save.
-const SUPPORTED_VERSIONS = new Set([3, SURVEY_VERSION]);
+const SUPPORTED_VERSIONS = new Set([4, SURVEY_VERSION]);
 
 export const SURFACES = new Set(["thank_you", "order_status"]);
 
 const FOLLOW_UP_A = new Set(["ad", "organic_ho", "organic_other", "unsure"]);
-const FOLLOW_UP_B = new Set(["brand", "product", "unsure"]);
+const FOLLOW_UP_B = new Set(["brand", "product", "ad", "unsure"]);
 
 // source -> allowed source_detail values (absent = no follow-up question)
 const DETAIL_BY_SOURCE = {
@@ -34,6 +34,8 @@ export const SOURCES = new Set([
   "tiktok",
   "youtube",
   "google",
+  // Retired in v5 (nested under google's follow-up); still accepted while
+  // already-loaded v4 checkout pages can submit it.
   "google_ad",
   "friend",
   "gift",
