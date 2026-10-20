@@ -13,7 +13,15 @@ import {
 const toMap = (options) =>
   Object.fromEntries(options.map((option) => [option.value, option.label]));
 
-export const SOURCE_LABELS = toMap([...Q1_OPTIONS, ...Q1_PINNED]);
+// Values retired from the live survey but present in stored responses.
+const LEGACY_SOURCE_LABELS = {
+  google_ad: "Google ad",
+};
+
+export const SOURCE_LABELS = {
+  ...LEGACY_SOURCE_LABELS,
+  ...toMap([...Q1_OPTIONS, ...Q1_PINNED]),
+};
 export const TRIGGER_LABELS = toMap(Q2_OPTIONS);
 
 // Follow-up values overlap between groups ("unsure" exists in both), so
@@ -36,11 +44,18 @@ export const STATUS_LABELS = {
   FAILED: "Failed",
 };
 
-/** Ordered list for filter dropdowns: same order as the spec table, pinned last. */
-export const SOURCE_OPTIONS = [...Q1_OPTIONS, ...Q1_PINNED].map((option) => ({
-  value: option.value,
-  label: option.label,
-}));
+/** Ordered list for filter dropdowns: same order as the spec table, pinned
+ * last, retired values at the end so old responses stay filterable. */
+export const SOURCE_OPTIONS = [
+  ...[...Q1_OPTIONS, ...Q1_PINNED].map((option) => ({
+    value: option.value,
+    label: option.label,
+  })),
+  ...Object.entries(LEGACY_SOURCE_LABELS).map(([value, label]) => ({
+    value,
+    label,
+  })),
+];
 
 export function sourceLabel(value) {
   return SOURCE_LABELS[value] ?? value ?? "";

@@ -2,7 +2,7 @@
 // pushed to Klaviyo, so they must stay in sync with the backend allow-lists in
 // app/lib/survey-validation.server.js. Bump SURVEY_VERSION whenever options change.
 
-export const SURVEY_VERSION = 4;
+export const SURVEY_VERSION = 5;
 
 export const COPY = {
   heading: "Quick question",
@@ -25,8 +25,7 @@ export const Q1_OPTIONS = [
   { value: "reddit", label: "Reddit", followUp: "A", text: "Which subreddit?" },
   { value: "tiktok", label: "TikTok", followUp: "A" },
   { value: "youtube", label: "YouTube", followUp: "A" },
-  { value: "google", label: "Google search", followUp: "B" },
-  { value: "google_ad", label: "Google ad" },
+  { value: "google", label: "Google", followUp: "B" },
   { value: "friend", label: "A friend or family member" },
   { value: "gift", label: "I received one as a gift" },
   { value: "bought_before", label: "I've bought from you before" },
@@ -57,6 +56,7 @@ export const FOLLOW_UPS = {
     options: [
       { value: "brand", label: "Hemlock & Oak by name" },
       { value: "product", label: "Planners or notebooks in general" },
+      { value: "ad", label: "An ad" },
       { value: "unsure", label: "Not sure" },
     ],
   },
